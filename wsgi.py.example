@@ -1,0 +1,24 @@
+# WSGI Configuration File for PythonAnywhere
+# Copy this file and update the username, then use it in PythonAnywhere's Web tab
+
+import sys
+import os
+
+# Add your project directory to the path
+# REPLACE 'yourusername' with your PythonAnywhere username!
+path = '/home/yourusername/emerald-counselor-ai'
+if path not in sys.path:
+    sys.path.insert(0, path)
+
+# Change to your project directory
+os.chdir(path)
+
+# Import your Flask app
+from main import app as application
+
+# If you're not using a .env file, you can set environment variables here:
+# import os
+# os.environ['SECRET_KEY'] = 'your-secret-key-here'
+# os.environ['OPENAI_API_KEY'] = 'your-openai-api-key'
+# os.environ['OPENAI_ASSISTANT_ID'] = 'your-assistant-id'
+

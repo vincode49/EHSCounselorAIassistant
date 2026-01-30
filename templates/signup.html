@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Emerald HS AI Counselor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(circle at top, rgba(255, 255, 255, 0.2), transparent 55%),
+                        linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body.is-loading {
+            overflow: hidden;
+        }
+
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 18, 43, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        .page-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-card {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid rgba(79, 172, 254, 0.35);
+            border-top-color: #4facfe;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .signup-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transform: translateY(10px);
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(14px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-section h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .logo-section p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .switch-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .switch-link a {
+            color: #4facfe;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="is-loading">
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-card">
+            <div class="spinner"></div>
+            <span>Preparing signup...</span>
+        </div>
+    </div>
+    <div class="signup-container">
+        <div class="logo-section">
+            <h1>🎓 Emerald High School</h1>
+            <p>AI Counselor - Create Account</p>
+        </div>
+
+        <form method="POST" action="/signup">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required minlength="3">
+                <div class="info-text">Choose a unique username (e.g., John67)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required minlength="6">
+                <div class="info-text">At least 6 characters</div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                <div class="password-mismatch" id="passwordMismatch">Passwords do not match</div>
+            </div>
+
+            <div class="form-group">
+                <label for="class_of">Class Of</label>
+                <select id="class_of" name="class_of" required>
+                    <option value="">Select your graduation year</option>
+                    <option value="2027">2027</option>
+                    <option value="2028">2028</option>
+                    <option value="2029">2029</option>
+                    <option value="2030">2030</option>
+                </select>
+            </div>
+
+            {% if error %}
+            <div class="error-message">{{ error }}</div>
+            {% endif %}
+
+            <button type="submit">Create Account</button>
+        </form>
+
+        <div class="switch-link">
+            Already have an account? <a href="/login">Login here</a>
+        </div>
+    </div>
+
+    <script>
+        const pageLoader = document.getElementById('pageLoader');
+        window.addEventListener('load', () => {
+            if (pageLoader) {
+                pageLoader.classList.add('hidden');
+                setTimeout(() => pageLoader.remove(), 500);
+            }
+            document.body.classList.remove('is-loading');
+        });
+
+        // Check if passwords match
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const passwordMismatch = document.getElementById('passwordMismatch');
+        const form = document.querySelector('form');
+
+        function checkPasswords() {
+            if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+                passwordMismatch.style.display = 'block';
+                confirmPasswordInput.setCustomValidity('Passwords do not match');
+            } else {
+                passwordMismatch.style.display = 'none';
+                confirmPasswordInput.setCustomValidity('');
+            }
+        }
+
+        passwordInput.addEventListener('input', checkPasswords);
+        confirmPasswordInput.addEventListener('input', checkPasswords);
+
+        // Prevent form submission if passwords don't match
+        form.addEventListener('submit', function(e) {
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                e.preventDefault();
+                passwordMismatch.style.display = 'block';
+                confirmPasswordInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>

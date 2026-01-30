@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emerald High School Counselor Assistant</title>
+    <style>
+        /* Reset and basic styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body.is-loading {
+            overflow: hidden;
+        }
+
+        /* Main chat container */
+        .chat-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(10px);
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(14px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 18, 43, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        .page-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-card {
+            background: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid rgba(79, 172, 254, 0.35);
+            border-top-color: #4facfe;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Header */
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .header-buttons {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .header-buttons.header-hidden {
+            top: 15px;
+            left: 20px;
+        }
+
+        .hide-header-btn, .show-header-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .hide-header-btn:hover, .show-header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .show-header-btn {
+            display: none;
+        }
+
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .profile-icon {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(79, 172, 254, 0.9);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9998;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-icon:hover {
+            background: rgba(79, 172, 254, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-icon-text {
+            font-size: 14px;
+        }
+
+        .logout-link {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            transition: background 0.3s;
+        }
+
+        .logout-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .download-link {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            transition: background 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .download-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .download-link-bottom {
+            position: absolute;
+            bottom: 90px;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            background: rgba(79, 172, 254, 0.9);
+            border-radius: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .download-link-bottom:hover {
+            background: rgba(79, 172, 254, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .message-checkbox {
+            position: absolute;
+            left: 5px;
+            top: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .message {
+            position: relative;
+            padding-left: 0;
+        }
+
+        .selection-mode .message {
+            padding-left: 35px;
+        }
+
+        #chatMessages.selection-mode {
+            padding-left: 50px;
+        }
+
+        #downloadSelectedBtn, #cancelSelectionBtn {
+            position: absolute;
+            top: 50px;
+            padding: 8px 16px;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            z-index: 1000;
+        }
+
+        #downloadSelectedBtn {
+            left: 20px;
+            background: rgba(76, 175, 80, 0.9);
+        }
+
+        #downloadSelectedBtn:hover {
+            background: rgba(76, 175, 80, 1);
+        }
+
+        #downloadSelectedBtn:disabled {
+            background: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+        }
+
+        #cancelSelectionBtn {
+            left: 180px;
+            background: rgba(244, 67, 54, 0.9);
+        }
+
+        #cancelSelectionBtn:hover {
+            background: rgba(244, 67, 54, 1);
+        }
+
+        .school-logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            background: white;
+            padding: 5px;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .user-info {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 5px;
+        }
+
+        /* Messages area */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        /* Individual message */
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+            position: relative;
+            padding-left: 0;
+        }
+
+        .selection-mode .message {
+            padding-left: 35px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.4;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .message-content:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+        }
+
+        /* Bot messages (left side) - Green */
+        .bot-message .message-content {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+            border: 1px solid #a5d6a7;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* User messages (right side) - Blue */
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .user-message .message-content {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Lists in bot messages */
+        .bot-message ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .bot-message li {
+            margin: 5px 0;
+        }
+
+        /* Input area */
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+            align-items: flex-end;
+            box-shadow: 0 -8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+            resize: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.4;
+            max-height: 150px;
+            overflow-y: auto;
+            min-height: 44px;
+            box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+
+        #userInput:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+        }
+
+        #sendButton {
+            margin-left: 10px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            flex-shrink: 0;
+        }
+
+        #sendButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        #sendButton:active {
+            transform: translateY(0);
+        }
+
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Markdown formatting in bot messages */
+        .bot-message h2 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0 5px 0;
+            color: #1b5e20;
+        }
+
+        .bot-message h3 {
+            font-size: 15px;
+            font-weight: bold;
+            margin: 8px 0 4px 0;
+            color: #2e7d32;
+        }
+
+        .bot-message strong {
+            font-weight: 600;
+            color: #1b5e20;
+        }
+
+        .bot-message em {
+            font-style: italic;
+        }
+
+        .bot-message code {
+            background-color: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #d32f2f;
+        }
+
+        .bot-message pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .bot-message pre code {
+            background-color: transparent;
+            color: #f8f8f2;
+            padding: 0;
+        }
+
+        .bot-message p {
+            margin: 8px 0;
+        }
+
+        /* Mobile dropdown menu */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 10001;
+            background: rgba(79, 172, 254, 0.95);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 60px;
+            left: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            min-width: 200px;
+            padding: 10px 0;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-menu-item {
+            display: block;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .mobile-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .mobile-menu-item.logout {
+            color: #d32f2f;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .profile-icon {
+                display: none;
+            }
+
+            .download-link-bottom {
+                display: none;
+            }
+
+            .replay-tutorial-btn {
+                display: none;
+            }
+
+            .chat-header h1 {
+                font-size: 18px;
+            }
+
+            .chat-header p {
+                font-size: 12px;
+            }
+
+            .user-info {
+                font-size: 11px;
+            }
+
+            .message-content {
+                max-width: 85%;
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            .school-logo {
+                width: 45px;
+                height: 45px;
+            }
+
+            .logout-link {
+                display: none;
+            }
+
+            .hide-header-btn, .show-header-btn {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
+            .header-buttons {
+                top: 10px;
+                left: 10px;
+            }
+
+            .chat-input {
+                padding: 15px;
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+            }
+
+            #userInput {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 10px 14px;
+            }
+
+            #sendButton {
+                padding: 10px 24px;
+                font-size: 14px;
+            }
+
+            .chat-messages {
+                padding: 15px;
+            }
+
+            .header-content {
+                padding-top: 50px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .chat-header h1 {
+                font-size: 16px;
+            }
+
+            .chat-header p {
+                font-size: 11px;
+            }
+
+            .user-info {
+                font-size: 10px;
+            }
+
+            .message-content {
+                max-width: 90%;
+                font-size: 13px;
+            }
+
+            .chat-input {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            #userInput,
+            #sendButton {
+                width: 100%;
+            }
+
+            .tutorial-buttons,
+            .profile-modal-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .tutorial-button,
+            .profile-button {
+                width: 100%;
+            }
+
+            .tutorial-modal,
+            .profile-modal {
+                width: 94%;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Tutorial Overlay Styles */
+        .tutorial-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .tutorial-overlay.active {
+            display: flex;
+        }
+
+        .tutorial-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tutorial-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+
+        .tutorial-header h2 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .tutorial-progress {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tutorial-progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transition: background 0.3s;
+        }
+
+        .tutorial-progress-dot.active {
+            background: white;
+        }
+
+        .tutorial-content {
+            padding: 30px;
+        }
+
+        .tutorial-step {
+            display: none;
+        }
+
+        .tutorial-step.active {
+            display: block;
+        }
+
+        .tutorial-step h3 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 15px;
+            color: #4facfe;
+        }
+
+        .tutorial-step p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .tutorial-step ul {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tutorial-step li {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .tutorial-example-question {
+            background: #f0f7ff;
+            border-left: 4px solid #4facfe;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tutorial-example-question:hover {
+            background: #e0efff;
+        }
+
+        .tutorial-example-question p {
+            margin: 0;
+            color: #1976d2;
+            font-weight: 500;
+        }
+
+        .tutorial-features {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .tutorial-features h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .tutorial-features ul {
+            margin-left: 20px;
+        }
+
+        .tutorial-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .tutorial-button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tutorial-button-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .tutorial-button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .tutorial-button-secondary {
+            background: #e0e0e0;
+            color: #555;
+        }
+
+        .tutorial-button-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .tutorial-button-skip {
+            background: transparent;
+            color: #999;
+            text-decoration: underline;
+            padding: 12px 20px;
+        }
+
+        .tutorial-button-skip:hover {
+            color: #666;
+        }
+
+        .tutorial-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .replay-tutorial-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(79, 172, 254, 0.9);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            display: none;
+        }
+
+        .replay-tutorial-btn:hover {
+            background: rgba(79, 172, 254, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .tutorial-highlight {
+            position: relative;
+            z-index: 10001;
+        }
+
+        .tutorial-task-complete {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .tutorial-task-complete.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .tutorial-task-complete p {
+            color: #2e7d32;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Profile Modal Styles */
+        .profile-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .profile-modal-overlay.active {
+            display: flex;
+        }
+
+        .profile-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .profile-modal-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+
+        .profile-modal-header h2 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .profile-modal-content {
+            padding: 30px;
+        }
+
+        .profile-form-group {
+            margin-bottom: 20px;
+        }
+
+        .profile-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .profile-form-group input,
+        .profile-form-group select,
+        .profile-form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .profile-form-group input:focus,
+        .profile-form-group select:focus,
+        .profile-form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .profile-form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .profile-modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+
+        .profile-button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .profile-button-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .profile-button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .profile-button-secondary {
+            background: #e0e0e0;
+            color: #555;
+        }
+
+        .profile-button-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .profile-info-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body class="is-loading">
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-card">
+            <div class="spinner"></div>
+            <span>Loading your counselor...</span>
+        </div>
+    </div>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-item" id="mobileProfileBtn">👤 Profile</div>
+        <div class="mobile-menu-item" id="mobileDownloadBtn">📥 Download Chat</div>
+        <div class="mobile-menu-item" id="mobileReplayTutorialBtn">📚 Replay Tutorial</div>
+        <a href="/logout" class="mobile-menu-item logout">🚪 Logout</a>
+    </div>
+
+    <!-- Profile Icon (Fixed Position) -->
+    <div class="profile-icon" id="profileIcon" title="Edit Profile">
+        <span>👤</span>
+        <span class="profile-icon-text">Profile</span>
+    </div>
+
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-buttons">
+                <button id="hideHeaderBtn" class="hide-header-btn" title="Hide Header">👁️ Hide</button>
+                <button id="showHeaderBtn" class="show-header-btn" title="Show Header">👁️ Show</button>
+            </div>
+            <button id="downloadSelectedBtn" style="display: none;">Download Selected</button>
+            <button id="cancelSelectionBtn" style="display: none;">Cancel</button>
+            <a href="/logout" class="logout-link">Logout</a>
+            <div class="header-content">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="School Logo" class="school-logo">
+                <h1>🎓 Emerald High School Counselor Assistant</h1>
+                <p>Ask me about courses, colleges, credits, clubs, and more!</p>
+                <div class="user-info">Welcome, {{ username }} (Class of {{ class_of }}) • {% if is_unlimited %}∞ Unlimited messages{% else %}💬 {{ messages_remaining }} messages left today{% endif %}</div>
+                {% if is_unlimited %}
+                <div class="user-info" style="margin-top: 8px; font-size: 12px; opacity: 0.9; color: #4caf50; font-weight: 500;">
+                    ⭐ You have unlimited messages!
+                </div>
+                {% endif %}
+                <div class="user-info" style="margin-top: 8px; font-size: 12px; opacity: 0.85;">
+                    ⏰ Each conversation automatically deletes after 7 days
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome message -->
+            <div class="message bot-message">
+                <div class="message-content">
+                    <p>Hi {{ username }}! I'm your AI counseling assistant. I can help you with:</p>
+                    <ul>
+                        <li>Course selection and requirements</li>
+                        <li>College counseling questions</li>
+                        <li>Credit requirements and graduation info</li>
+                        <li>Clubs, sports, and extracurriculars</li>
+                    </ul>
+                    <p>What would you like to know?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input">
+            <button id="downloadChatBtnBottom" class="download-link-bottom" title="Download Chat">📥 Download Chat</button>
+            <textarea
+                id="userInput"
+                placeholder="Type your question here... (Shift+Enter for new line)"
+                autocomplete="off"
+                rows="1"
+            ></textarea>
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div id="tutorialOverlay" class="tutorial-overlay">
+        <div class="tutorial-modal">
+            <div class="tutorial-header">
+                <h2>Welcome to Emerald High School Counselor Assistant!</h2>
+                <div class="tutorial-progress" id="tutorialProgress"></div>
+            </div>
+            <div class="tutorial-content">
+                <!-- Step 1: What is it? -->
+                <div class="tutorial-step active" id="step1">
+                    <h3>Step 1: What is this?</h3>
+                    <p>This is an <strong>AI Counselor Assistant</strong> designed to help you with course selection, college planning, credit requirements, and more!</p>
+                    <p>The AI can answer questions about:</p>
+                    <ul>
+                        <li>Which courses to take next year</li>
+                        <li>College and career planning</li>
+                        <li>Graduation requirements and credits</li>
+                        <li>Extracurricular activities and clubs</li>
+                    </ul>
+                    <div class="tutorial-features">
+                        <p><strong>Important:</strong> This AI assistant is a helpful tool, but it's not a replacement for your actual school counselor. We recommend speaking with your school counselor to work through your thoughts and ideas in more depth.</p>
+                    </div>
+                    <div class="tutorial-buttons">
+                        <button class="tutorial-button tutorial-button-skip" onclick="tutorialSkip()">Skip Tutorial</button>
+                        <button class="tutorial-button tutorial-button-primary" onclick="tutorialNext()">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Example Problems -->
+                <div class="tutorial-step" id="step2">
+                    <h3>Step 2: Try asking a question!</h3>
+                    <p>Here are some example questions you can ask. Click on one to try it out:</p>
+                    <div class="tutorial-example-question" onclick="tutorialTryQuestion('What courses should I take next year?')">
+                        <p>💬 "What courses should I take next year?"</p>
+                    </div>
+                    <div class="tutorial-example-question" onclick="tutorialTryQuestion('I want to go to college for engineering. What classes should I take?')">
+                        <p>💬 "I want to go to college for engineering. What classes should I take?"</p>
+                    </div>
+                    <div class="tutorial-example-question" onclick="tutorialTryQuestion('How many credits do I need to graduate?')">
+                        <p>💬 "How many credits do I need to graduate?"</p>
+                    </div>
+                    <div class="tutorial-task-complete" id="taskComplete2">
+                        <p>✓ Great! You've asked a question. Wait for the response, then continue.</p>
+                    </div>
+                    <div class="tutorial-buttons">
+                        <button class="tutorial-button tutorial-button-secondary" onclick="tutorialPrevious()">← Back</button>
+                        <button class="tutorial-button tutorial-button-primary" id="step2Next" onclick="tutorialNext()" disabled>Next →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Profile Setup -->
+                <div class="tutorial-step" id="step3">
+                    <h3>Step 3: Set up your profile</h3>
+                    <p>To personalize your guidance, please fill out <strong>all</strong> profile fields and click <strong>Save Changes</strong>. You can always edit or clear them later.</p>
+                    <div class="tutorial-features">
+                        <h4>👤 Profile Settings</h4>
+                        <p>Click the <strong>"👤 Profile"</strong> button in the upper right corner to edit your display name, current grade, and interests.</p>
+                        <p><strong>Try it now:</strong> Open Profile, fill in every field, then click Save Changes.</p>
+                        <button class="tutorial-button tutorial-button-primary" type="button" onclick="openProfileModal()">Open Profile</button>
+                    </div>
+                    <div class="tutorial-task-complete" id="taskComplete3">
+                        <p>✓ Great! Your profile is saved. You can change it anytime.</p>
+                    </div>
+                    <div class="tutorial-buttons">
+                        <button class="tutorial-button tutorial-button-secondary" onclick="tutorialPrevious()">← Back</button>
+                        <button class="tutorial-button tutorial-button-primary" id="step3Next" onclick="tutorialNext()" disabled>Next →</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Unique Features -->
+                <div class="tutorial-step" id="step4">
+                    <h3>Step 4: Key Features to Know</h3>
+                    <div class="tutorial-features">
+                        <h4>⏰ Auto-Deletion (7 Days)</h4>
+                        <p>Each conversation automatically deletes after <strong>7 days</strong> to protect your privacy. Make sure to download any important conversations!</p>
+                        
+                        <h4 style="margin-top: 20px;">💬 Message Limits</h4>
+                        <p>You have <strong>{% if is_unlimited %}unlimited{% else %}{{ messages_remaining }}{% endif %}</strong> messages per day to use. Use them wisely!</p>
+                        
+                        <h4 style="margin-top: 20px;">📥 Download Conversations</h4>
+                        <p>You can download specific parts of your conversation as a PDF! Click the <strong>"📥 Download Chat"</strong> button in the bottom left, select the messages you want, and download them.</p>
+                        <p><strong>Try it now:</strong> Look for the download button in the bottom left!</p>
+                    </div>
+                    <div class="tutorial-buttons">
+                        <button class="tutorial-button tutorial-button-secondary" onclick="tutorialPrevious()">← Back</button>
+                        <button class="tutorial-button tutorial-button-primary" id="step4Next" onclick="tutorialComplete()">Finish Tutorial</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModalOverlay" class="profile-modal-overlay">
+        <div class="profile-modal">
+            <div class="profile-modal-header">
+                <h2>Edit Profile</h2>
+            </div>
+            <div class="profile-modal-content">
+                <form id="profileForm">
+                    <div class="profile-form-group">
+                        <label for="profileDisplayName">Display Name (optional)</label>
+                        <input type="text" id="profileDisplayName" name="display_name" placeholder="Your preferred name">
+                        <div class="profile-info-text">This is how the AI will address you. Leave blank to use your username.</div>
+                    </div>
+
+                    <div class="profile-form-group">
+                        <label for="profileCurrentGrade">Current Grade</label>
+                        <select id="profileCurrentGrade" name="current_grade">
+                            <option value="">Select your current grade</option>
+                            <option value="9">9 (Freshman)</option>
+                            <option value="10">10 (Sophomore)</option>
+                            <option value="11">11 (Junior)</option>
+                            <option value="12">12 (Senior)</option>
+                        </select>
+                        <div class="profile-info-text">Your current grade level (not graduation year)</div>
+                    </div>
+
+                    <div class="profile-form-group">
+                        <label for="profileBio">Bio/Interests (optional)</label>
+                        <textarea id="profileBio" name="bio" placeholder="Tell the AI about your interests, goals, or anything else that might help it give you better advice..."></textarea>
+                        <div class="profile-info-text">This helps the AI provide more personalized recommendations.</div>
+                    </div>
+
+                    <div class="profile-modal-buttons">
+                        <button type="button" class="profile-button profile-button-secondary" onclick="closeProfileModal()">Cancel</button>
+                        <button type="submit" class="profile-button profile-button-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Replay Tutorial Button -->
+    <button class="replay-tutorial-btn" id="replayTutorialBtn" onclick="tutorialStart()">Replay Tutorial</button>
+
+    <!-- Tutorial completion status (used by tutorial.js) -->
+    <script type="application/json" id="tutorial-data">
+    {
+        "completed": {% if tutorial_completed is defined %}{{ tutorial_completed }}{% else %}0{% endif %}
+    }
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='chat_download.js') }}"></script>
+    <script src="{{ url_for('static', filename='tutorial.js') }}"></script>
+    <script src="{{ url_for('static', filename='header_toggle.js') }}"></script>
+    <script>
+        const pageLoader = document.getElementById('pageLoader');
+        window.addEventListener('load', () => {
+            if (pageLoader) {
+                pageLoader.classList.add('hidden');
+                setTimeout(() => pageLoader.remove(), 500);
+            }
+            document.body.classList.remove('is-loading');
+        });
+
+        // Profile modal functionality
+        const profileIcon = document.getElementById('profileIcon');
+        const profileModalOverlay = document.getElementById('profileModalOverlay');
+        const profileForm = document.getElementById('profileForm');
+
+        // Load profile data
+        async function loadProfile() {
+            try {
+                const response = await fetch('/profile');
+                const data = await response.json();
+                
+                if (data.display_name) {
+                    document.getElementById('profileDisplayName').value = data.display_name;
+                }
+                if (data.current_grade) {
+                    document.getElementById('profileCurrentGrade').value = data.current_grade;
+                }
+                if (data.bio) {
+                    document.getElementById('profileBio').value = data.bio;
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // Open profile modal
+        function openProfileModal() {
+            loadProfile();
+            profileModalOverlay.classList.add('active');
+        }
+
+        if (profileIcon) {
+            profileIcon.addEventListener('click', openProfileModal);
+        }
+
+        // Mobile menu functionality
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileProfileBtn = document.getElementById('mobileProfileBtn');
+        const mobileDownloadBtn = document.getElementById('mobileDownloadBtn');
+        const mobileReplayTutorialBtn = document.getElementById('mobileReplayTutorialBtn');
+
+        if (mobileMenuToggle && mobileMenu) {
+            mobileMenuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                mobileMenu.classList.toggle('active');
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (mobileMenu.classList.contains('active') && 
+                    !mobileMenu.contains(e.target) && 
+                    !mobileMenuToggle.contains(e.target)) {
+                    mobileMenu.classList.remove('active');
+                }
+            });
+        }
+
+        if (mobileProfileBtn) {
+            mobileProfileBtn.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                openProfileModal();
+            });
+        }
+
+
+        if (mobileDownloadBtn) {
+            mobileDownloadBtn.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                const downloadBtn = document.getElementById('downloadChatBtnBottom');
+                if (downloadBtn) downloadBtn.click();
+            });
+        }
+
+        if (mobileReplayTutorialBtn) {
+            mobileReplayTutorialBtn.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                if (typeof tutorialStart === 'function') {
+                    tutorialStart();
+                }
+            });
+        }
+
+
+        // Close profile modal
+        function closeProfileModal() {
+            profileModalOverlay.classList.remove('active');
+        }
+
+        // Close on overlay click
+        profileModalOverlay.addEventListener('click', (e) => {
+            if (e.target === profileModalOverlay) {
+                closeProfileModal();
+            }
+        });
+
+        // Handle form submission
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const displayNameValue = document.getElementById('profileDisplayName').value;
+            const currentGradeValue = document.getElementById('profileCurrentGrade').value;
+            const bioValue = document.getElementById('profileBio').value;
+            const isTutorialProfileStep = typeof tutorialProfileStepRequired === 'function' && tutorialProfileStepRequired();
+
+            if (isTutorialProfileStep) {
+                if (!displayNameValue.trim() || !currentGradeValue || !bioValue.trim()) {
+                    alert('Please fill out every profile field to continue the tutorial. You can edit or clear them later.');
+                    return;
+                }
+            }
+
+            const formData = {
+                display_name: displayNameValue,
+                current_grade: currentGradeValue ? parseInt(currentGradeValue) : null,
+                bio: bioValue
+            };
+
+            try {
+                const response = await fetch('/profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (isTutorialProfileStep && typeof tutorialProfileStepCompleted === 'function') {
+                        tutorialProfileStepCompleted({
+                            display_name: displayNameValue,
+                            current_grade: currentGradeValue,
+                            bio: bioValue
+                        });
+                        alert('Profile saved! Continue the tutorial.');
+                        closeProfileModal();
+                    } else {
+                        alert('Profile updated successfully!');
+                        closeProfileModal();
+                        location.reload();
+                    }
+                } else {
+                    alert('Error updating profile: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Error updating profile. Please try again.');
+            }
+        });
+
+        window.closeProfileModal = closeProfileModal;
+    </script>
+</body>
+</html>
